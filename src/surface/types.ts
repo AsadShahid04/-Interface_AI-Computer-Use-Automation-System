@@ -3,6 +3,7 @@ export interface SurfaceAction {
   target?: string;
   value?: string;
   timeout?: number;
+  description?: string;
 }
 
 export interface SurfaceObservation {

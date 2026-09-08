@@ -59,7 +59,7 @@ export class DiscoveryAgent {
       const step: Step = {
         id: `step_${i + 1}`,
         action: {
-          type: decision.action.type,
+          type: decision.action.type as any,
           target: decision.action.target,
           value: decision.action.value,
           description: decision.reasoning

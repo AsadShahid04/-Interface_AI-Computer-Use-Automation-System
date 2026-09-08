@@ -34,8 +34,23 @@ export class PlaywrightWebSurface implements SurfaceAdapter {
       throw new Error('Surface not initialized');
     }
 
-    const snapshot = await this.page.accessibility.snapshot();
-    return this.formatAccessibilityNode(snapshot, 0);
+    const bodyText = await this.page.evaluate(`document.body.innerText`);
+
+    const formElements = await this.page.evaluate(`
+      (() => {
+        const elements = [];
+        document.querySelectorAll('input, button, select, textarea').forEach(el => {
+          const tag = el.tagName.toLowerCase();
+          const name = el.getAttribute('name') || '';
+          const placeholder = el.placeholder || '';
+          const text = (el.textContent || '').trim();
+          elements.push(tag + (name ? '[name="' + name + '"]' : '') + (placeholder ? ' placeholder="' + placeholder + '"' : '') + (text ? ' "' + text + '"' : ''));
+        });
+        return elements.join('\\n');
+      })()
+    `);
+
+    return `Body text:\n${bodyText}\n\nForm elements:\n${formElements}`;
   }
 
   private formatAccessibilityNode(node: any, depth: number): string {
