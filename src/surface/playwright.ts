@@ -142,14 +142,15 @@ export class PlaywrightWebSurface implements SurfaceAdapter {
       throw new Error('Surface not initialized');
     }
 
+    const parts = selector.split(':');
+    if (parts.length === 2) {
+      const [role, name] = parts;
+      return this.page.getByRole(role as any, { name });
+    }
+
     try {
-      return await this.page.locator(selector).first();
-    } catch {
-      const parts = selector.split(':');
-      if (parts.length === 2) {
-        const [role, name] = parts;
-        return this.page.getByRole(role as any, { name });
-      }
+      return this.page.locator(selector).first();
+    } catch (error) {
       throw new Error(`Could not find element: ${selector}`);
     }
   }

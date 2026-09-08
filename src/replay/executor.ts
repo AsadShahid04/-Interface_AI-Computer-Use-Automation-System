@@ -37,6 +37,17 @@ export class ReplayExecutor {
         try {
           await this.executeStep(surface, step, parameters);
           this.logger.info(`Step ${i + 1} completed`, { step: step.id });
+          
+          const observation = await surface.observe();
+          const businessOutcome = this.detectBusinessOutcome(observation);
+          if (businessOutcome) {
+            return {
+              status: 'business_outcome',
+              code: businessOutcome.code,
+              message: businessOutcome.message,
+              steps: i + 1
+            };
+          }
         } catch (error) {
           const observation = await surface.observe();
           
