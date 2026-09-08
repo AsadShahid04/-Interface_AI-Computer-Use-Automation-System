@@ -1,0 +1,59 @@
+{
+  "version": "1.0",
+  "id": "8f7c3a1b-4d2e-4f9c-9b1a-2e5d6f8a9c0b",
+  "name": "look_up_member_12345_and_read_the_savings_balance",
+  "description": "Look up member 12345 and read the savings balance",
+  "domain": "localhost:3000",
+  "createdAt": "2026-09-08T20:30:00.000Z",
+  "updatedAt": "2026-09-08T20:30:00.000Z",
+  "parameters": [
+    {
+      "name": "memberId",
+      "type": "string",
+      "description": "Member ID to look up",
+      "required": true
+    }
+  ],
+  "steps": [
+    {
+      "id": "step_1",
+      "action": {
+        "type": "type",
+        "target": "input[name=\"id\"]",
+        "value": "{memberId}",
+        "description": "Enter member ID in search field"
+      },
+      "expectedOutcome": "Member ID populated in input field"
+    },
+    {
+      "id": "step_2",
+      "action": {
+        "type": "click",
+        "target": "button:Search Member",
+        "description": "Click search button to submit query"
+      },
+      "expectedOutcome": "Navigate to member details page"
+    },
+    {
+      "id": "step_3",
+      "action": {
+        "type": "wait",
+        "timeout": 1000,
+        "description": "Wait for page to load"
+      },
+      "expectedOutcome": "Member details displayed"
+    }
+  ],
+  "successCriteria": [
+    "Task completed without errors",
+    "Expected data retrieved"
+  ],
+  "metadata": {
+    "discoveryModel": "claude-haiku-4-5-20251001",
+    "discoveryRun": "2026-09-08T20:30:00.000Z",
+    "tags": [
+      "discovered",
+      "demo-bank"
+    ]
+  }
+}
