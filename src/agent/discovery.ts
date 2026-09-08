@@ -100,7 +100,7 @@ export class DiscoveryAgent {
       id: randomUUID(),
       name: this.generateArtifactName(goal),
       description: goal,
-      domain: new URL(startUrl).hostname,
+      domain: new URL(startUrl).host,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       parameters: this.extractParameters(goal),
@@ -224,7 +224,7 @@ Be specific and concise.`;
 
   private extractParameters(goal: string): any[] {
     const params: any[] = [];
-    const memberIdMatch = goal.match(/member\s+(\d+|ID)/i);
+    const memberIdMatch = goal.match(/member\s+(\d+)/i);
     
     if (memberIdMatch) {
       params.push({

@@ -1,11 +1,17 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import 'dotenv/config';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
+import { config } from 'dotenv';
 import { PlaywrightWebSurface } from './surface/playwright.js';
 import { DiscoveryAgent } from './agent/discovery.js';
 import { ReplayExecutor } from './replay/executor.js';
 import { EscalationManager } from './escalation/handoff.js';
 import { Logger } from './utils/logger.js';
 import { CapabilityArtifact, CapabilityArtifactSchema } from './artifact/schema.js';
+
+if (existsSync('.env.local')) {
+  config({ path: '.env.local', override: true });
+}
 
 const EVIDENCE_DIR = './evidence';
 const ARTIFACTS_DIR = join(EVIDENCE_DIR, 'artifacts');

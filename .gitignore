@@ -4,7 +4,7 @@ dist/
 .env.local
 *.log
 evidence/screenshots/*.png
-evidence/logs/*.json
+evidence/logs/replay_*.json
 playwright-report/
 test-results/
 coverage/
