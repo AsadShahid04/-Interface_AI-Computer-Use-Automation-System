@@ -5,6 +5,7 @@ export class PlaywrightWebSurface implements SurfaceAdapter {
   private browser?: Browser;
   private context?: BrowserContext;
   private page?: Page;
+  private lastScreenshot?: Buffer;
 
   async initialize(): Promise<void> {
     this.browser = await chromium.launch({ headless: true });
@@ -25,6 +26,7 @@ export class PlaywrightWebSurface implements SurfaceAdapter {
       url,
       title,
       accessibilityTree,
+      screenshot: this.lastScreenshot,
       timestamp: Date.now()
     };
   }
@@ -85,6 +87,7 @@ export class PlaywrightWebSurface implements SurfaceAdapter {
         break;
 
       case 'screenshot':
+        this.lastScreenshot = await this.page.screenshot({ fullPage: true });
         break;
 
       default:

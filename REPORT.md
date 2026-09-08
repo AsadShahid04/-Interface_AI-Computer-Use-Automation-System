@@ -175,15 +175,15 @@ This runs after each step, not just at the end, enabling early detection.
 
 #### Scaling
 
-- **Stateless replay**: Executor instances can run in parallel (Kubernetes pods, Lambda functions)
-- **Artifact storage**: Centralized registry (S3, database) with versioning and ACLs
-- **Execution queue**: Tenant-partitioned queue (SQS, RabbitMQ) for fairness and rate limiting
+- **Stateless replay**: Executor instances can run in parallel (containerized workers)
+- **Artifact storage**: Centralized registry with versioning and access control
+- **Execution queue**: Tenant-partitioned queue for fairness and rate limiting
 
 #### Security
 
 - **Credential injection**: Tenant secrets passed as parameters at replay time, not stored in artifacts
 - **Audit logs**: Every replay tagged with tenant ID, user ID, artifact version
-- **Sandbox enforcement**: Surface adapter runs in restricted environment (no filesystem access, network limited to allowlist)
+- **Network isolation**: Surface adapter navigation restricted to allowlisted domains
 
 #### Example Multi-Tenant Flow
 
@@ -330,8 +330,8 @@ The following were cut from the demo to meet time constraints but are designed i
 
 1. **Discovery coordination**: Centralized registry prevents redundant exploration of same flows
 2. **Artifact optimization**: Post-processing removes redundant steps, merges waits
-3. **Execution infrastructure**: Kubernetes-based autoscaling, tenant-partitioned queues
-4. **Credential management**: Integration with HashiCorp Vault or AWS Secrets Manager
-5. **Observability**: OpenTelemetry tracing, Datadog metrics for success/failure rates per artifact
-6. **Artifact testing**: CI/CD pipeline runs regression tests on all artifacts when UI changes detected
-7. **Human-in-the-loop efficiency**: Predictive escalation based on artifact history (this artifact fails 80% → auto-escalate)
+3. **Execution infrastructure**: Containerized workers with horizontal scaling
+4. **Credential management**: Secure secret injection per tenant
+5. **Observability**: Distributed tracing and metrics for success/failure rates per artifact
+6. **Artifact testing**: Automated regression tests when UI changes detected
+7. **Predictive escalation**: Route to human earlier based on artifact failure history

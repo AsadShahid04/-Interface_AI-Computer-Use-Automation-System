@@ -9,12 +9,12 @@ This system demonstrates a complete observe-decide-act loop where an LLM discove
 ## Features
 
 - **LLM-driven discovery**: Uses Anthropic Claude Haiku to explore and learn UI interactions
-- **Typed artifacts**: Versioned JSON schemas validated with Zod
+- **Typed artifacts**: Versioned JSON schemas with typed outputs, validated with Zod
 - **Deterministic replay**: Execute discovered capabilities without LLM in the loop
 - **Business outcome detection**: Distinguishes between technical errors and business outcomes (e.g., "record not found")
-- **Safety controls**: Domain allowlists and PII redaction
-- **Human escalation**: Live session handoff when automation encounters blockers
-- **Evidence trail**: Structured logs and failure artifacts for observability
+- **Safety controls**: Domain allowlists, risky action blocking, and PII redaction enforced in discovery and replay
+- **Human escalation**: Live session handoff with pause/cede/resume on the same browser context
+- **Failure evidence**: Screenshots and DOM snapshots captured on hard failures
 
 ## Setup
 
@@ -56,23 +56,31 @@ The demo bank runs at `http://localhost:3000` with intentionally hostile HTML (t
 
 ### 2. Discover Capability (requires API key)
 
-In another terminal:
+**Note**: The current artifact in `evidence/artifacts/` is a provisional stand-in marked with `"provisional": true` in metadata. A real LLM-driven discovery run has not yet been executed. To run genuine discovery:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
 npm run discover
 ```
 
-This runs the LLM-driven agent to:
+This would run the LLM-driven agent to:
 - Navigate to the demo bank
 - Explore the UI using accessibility tree observations
 - Determine actions (click, type) to accomplish the goal
 - Save the discovered capability artifact to `evidence/artifacts/`
 
+Until a real discovery run is completed, the provisional artifact can be used to test replay functionality.
+
 ### 3. Replay with Success
 
 ```bash
 npm run replay evidence/artifacts/member-lookup-capability.json 12345
+```
+
+Or using the shorter form if only one artifact exists:
+
+```bash
+npm run replay "" 12345
 ```
 
 **Expected output:**
@@ -158,18 +166,25 @@ npm run escalate
 
 ## Evidence
 
-The `evidence/` directory contains real execution artifacts:
-- Pre-generated capability artifact (discovery output)
-- Replay logs showing success and business outcome paths
+The `evidence/` directory contains:
+- **Provisional capability artifact** (`artifacts/member-lookup-capability.json`) - A stand-in until real LLM discovery is run
+- **Replay logs** showing deterministic execution for success and business outcome cases
+- **Failure screenshots** captured when hard failures occur (in `screenshots/`)
 - See `evidence/README.md` for details
 
 ## Implementation Notes
 
-### Without API Key
+### Discovery Status
 
-If `ANTHROPIC_API_KEY` is not set, the discovery command will fail with a clear error message. However, replay and escalation work independently since they don't require LLM inference.
+**Current State**: The discovery agent code is complete and wired with safety controls, but a real LLM-driven discovery run has not been executed yet due to API key unavailability.
 
-The provided artifact (`evidence/artifacts/member-lookup-capability.json`) represents what the discovery agent would produce and can be used to test replay functionality.
+The provisional artifact (`evidence/artifacts/member-lookup-capability.json`) is marked with `metadata.provisional: true` and demonstrates the schema format. It can be used to test replay and escalation, which work independently without LLM inference.
+
+To execute a genuine discovery run, set `ANTHROPIC_API_KEY` and run `npm run discover`. The agent will:
+- Use Claude Haiku for cost-optimized exploration
+- Enforce safety policy (domain allowlist, risky action blocking)
+- Capture structured logs with LLM observations and decisions
+- Generate a real artifact with `metadata.discoveryModel` and `discoveryRun` timestamps
 
 ### Design for Multi-Tenant
 

@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "id": "8f7c3a1b-4d2e-4f9c-9b1a-2e5d6f8a9c0b",
-  "name": "look_up_member_12345_and_read_the_savings_balance",
-  "description": "Look up member 12345 and read the savings balance",
+  "id": "provisional-member-lookup",
+  "name": "member_lookup_demo_bank",
+  "description": "Look up a member by ID and extract account balances",
   "domain": "localhost:3000",
-  "createdAt": "2026-09-08T20:30:00.000Z",
-  "updatedAt": "2026-09-08T20:30:00.000Z",
+  "createdAt": "2026-09-08T20:43:00.000Z",
+  "updatedAt": "2026-09-08T20:43:00.000Z",
   "parameters": [
     {
       "name": "memberId",
@@ -32,28 +32,49 @@
         "target": "button:Search Member",
         "description": "Click search button to submit query"
       },
-      "expectedOutcome": "Navigate to member details page"
+      "expectedOutcome": "Navigate to member details page or error message"
     },
     {
       "id": "step_3",
       "action": {
         "type": "wait",
         "timeout": 1000,
-        "description": "Wait for page to load"
+        "description": "Wait for page to stabilize"
       },
-      "expectedOutcome": "Member details displayed"
+      "expectedOutcome": "Member details displayed or error shown"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "savingsBalance",
+      "type": "string",
+      "pattern": "Savings Balance[:\\s]*\\$?([0-9,]+\\.\\d{2})",
+      "required": true
+    },
+    {
+      "name": "checkingBalance",
+      "type": "string",
+      "pattern": "Checking Balance[:\\s]*\\$?([0-9,]+\\.\\d{2})",
+      "required": false
+    },
+    {
+      "name": "memberName",
+      "type": "string",
+      "pattern": "Full Name[:\\s]*\"([^\"]+)\"",
+      "required": false
     }
   ],
   "successCriteria": [
-    "Task completed without errors",
-    "Expected data retrieved"
+    "URL contains /member?id=",
+    "savingsBalance field extracted successfully",
+    "No error message present in page text"
   ],
   "metadata": {
-    "discoveryModel": "claude-haiku-4-5-20251001",
-    "discoveryRun": "2026-09-08T20:30:00.000Z",
+    "provisional": true,
+    "discoveryStatus": "pending_live_run",
     "tags": [
-      "discovered",
-      "demo-bank"
+      "demo-bank",
+      "provisional"
     ]
   }
 }

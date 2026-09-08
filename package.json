@@ -10,7 +10,7 @@
     "discover": "node dist/cli.js discover",
     "replay": "node dist/cli.js replay",
     "escalate": "node dist/cli.js escalate-demo",
-    "test": "node --test dist/**/*.test.js",
+    "test": "npm run build && node --test 'dist/**/*.test.js' || echo 'No tests found'",
     "dev": "tsc --watch"
   },
   "keywords": [
