@@ -53,31 +53,6 @@ export class PlaywrightWebSurface implements SurfaceAdapter {
     return `Body text:\n${bodyText}\n\nForm elements:\n${formElements}`;
   }
 
-  private formatAccessibilityNode(node: any, depth: number): string {
-    if (!node) return '';
-    
-    const indent = '  '.repeat(depth);
-    let result = `${indent}${node.role || 'node'}`;
-    
-    if (node.name) {
-      result += ` "${node.name}"`;
-    }
-    
-    if (node.value) {
-      result += ` value="${node.value}"`;
-    }
-    
-    result += '\n';
-    
-    if (node.children) {
-      for (const child of node.children) {
-        result += this.formatAccessibilityNode(child, depth + 1);
-      }
-    }
-    
-    return result;
-  }
-
   async act(action: SurfaceAction): Promise<void> {
     if (!this.page) {
       throw new Error('Surface not initialized');
