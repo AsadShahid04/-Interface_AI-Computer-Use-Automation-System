@@ -1,0 +1,32 @@
+{
+  "name": "computer-use-automation",
+  "version": "1.0.0",
+  "description": "LLM-driven automation system with deterministic replay",
+  "main": "dist/cli.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "demo:bank": "node dist/demo-bank/server.js",
+    "discover": "node dist/cli.js discover",
+    "replay": "node dist/cli.js replay",
+    "escalate": "node dist/cli.js escalate-demo",
+    "test": "node --test dist/**/*.test.js",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "automation",
+    "computer-use",
+    "llm"
+  ],
+  "author": "Asad Shahid",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "playwright": "^1.49.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "typescript": "^5.7.2"
+  }
+}
