@@ -1,6 +1,9 @@
 import { SurfaceAdapter, SurfaceObservation } from '../surface/types.js';
 import { CapabilityArtifact, Step } from '../artifact/schema.js';
 import { Logger } from '../utils/logger.js';
+import { SafetyPolicy } from '../policy/safety.js';
+import { writeFileSync, mkdirSync } from 'fs';
+import { join } from 'path';
 
 export type ReplayOutcome = 
   | { status: 'success'; result: any; steps: number }
@@ -9,7 +12,13 @@ export type ReplayOutcome =
   | { status: 'hard_failure'; error: string; lastStep: number };
 
 export class ReplayExecutor {
-  constructor(private logger: Logger) {}
+  private policy: SafetyPolicy;
+
+  constructor(private logger: Logger, policy?: SafetyPolicy) {
+    this.policy = policy || new SafetyPolicy({
+      allowedDomains: ['localhost']
+    });
+  }
 
   async execute(
     surface: SurfaceAdapter,
@@ -69,6 +78,8 @@ export class ReplayExecutor {
             };
           }
 
+          await this.captureFailureEvidence(surface, artifact, i, String(error));
+          
           return {
             status: 'hard_failure',
             error: String(error),
@@ -105,6 +116,12 @@ export class ReplayExecutor {
 
     if (action.value) {
       action.value = this.interpolateParameters(action.value, parameters);
+    }
+
+    const observation = await surface.observe();
+    const validation = this.policy.validateAction(action, observation.url);
+    if (!validation.allowed) {
+      throw new Error(`Policy violation: ${validation.reason}`);
     }
 
     await surface.act(action);
@@ -151,20 +168,58 @@ export class ReplayExecutor {
 
   private extractResult(artifact: CapabilityArtifact, observation: SurfaceObservation): any {
     const tree = observation.accessibilityTree;
-    
-    const savingsMatch = tree.match(/Savings Balance[:\s]*\$?([0-9,]+\.\d{2})/i);
-    const checkingMatch = tree.match(/Checking Balance[:\s]*\$?([0-9,]+\.\d{2})/i);
-    const nameMatch = tree.match(/Full Name[:\s]*"([^"]+)"/i);
-    const memberIdMatch = tree.match(/Member ID[:\s]*"([^"]+)"/i);
+    const data: Record<string, any> = {};
+
+    if (artifact.outputs) {
+      for (const output of artifact.outputs) {
+        if (output.pattern) {
+          const regex = new RegExp(output.pattern, 'i');
+          const match = tree.match(regex);
+          if (match && match[1]) {
+            data[output.name] = match[1];
+          }
+        }
+      }
+    } else {
+      const savingsMatch = tree.match(/Savings Balance[:\s]*\$?([0-9,]+\.\d{2})/i);
+      const checkingMatch = tree.match(/Checking Balance[:\s]*\$?([0-9,]+\.\d{2})/i);
+      const nameMatch = tree.match(/Full Name[:\s]*"([^"]+)"/i);
+      const memberIdMatch = tree.match(/Member ID[:\s]*"([^"]+)"/i);
+
+      data.memberId = memberIdMatch?.[1];
+      data.name = nameMatch?.[1];
+      data.savingsBalance = savingsMatch?.[1];
+      data.checkingBalance = checkingMatch?.[1];
+    }
 
     return {
       url: observation.url,
-      data: {
-        memberId: memberIdMatch?.[1],
-        name: nameMatch?.[1],
-        savingsBalance: savingsMatch?.[1],
-        checkingBalance: checkingMatch?.[1]
-      }
+      data: this.policy.redactSensitiveData(JSON.stringify(data))
     };
+  }
+
+  private async captureFailureEvidence(
+    surface: SurfaceAdapter,
+    artifact: CapabilityArtifact,
+    step: number,
+    error: string
+  ): Promise<void> {
+    try {
+      const screenshotDir = './evidence/screenshots';
+      mkdirSync(screenshotDir, { recursive: true });
+
+      const timestamp = Date.now();
+      const screenshotPath = join(screenshotDir, `failure_${artifact.name}_step${step}_${timestamp}.png`);
+      
+      await surface.act({ type: 'screenshot', description: 'Capture failure state' });
+      
+      const observation = await surface.observe();
+      const evidencePath = join(screenshotDir, `failure_${artifact.name}_step${step}_${timestamp}.txt`);
+      writeFileSync(evidencePath, `Error: ${error}\n\nURL: ${observation.url}\n\nPage State:\n${observation.accessibilityTree}`);
+      
+      this.logger.info('Failure evidence captured', { screenshotPath, evidencePath });
+    } catch (captureError) {
+      this.logger.warn('Failed to capture evidence', { error: String(captureError) });
+    }
   }
 }

@@ -25,6 +25,14 @@ export const ParameterSchema = z.object({
   required: z.boolean()
 });
 
+export const OutputFieldSchema = z.object({
+  name: z.string(),
+  type: z.enum(['string', 'number', 'boolean']),
+  selector: z.string().optional(),
+  pattern: z.string().optional(),
+  required: z.boolean()
+});
+
 export const CapabilityArtifactSchema = z.object({
   version: z.literal('1.0'),
   id: z.string(),
@@ -35,8 +43,11 @@ export const CapabilityArtifactSchema = z.object({
   updatedAt: z.string(),
   parameters: z.array(ParameterSchema),
   steps: z.array(StepSchema),
+  outputs: z.array(OutputFieldSchema).optional(),
   successCriteria: z.array(z.string()),
   metadata: z.object({
+    provisional: z.boolean().optional(),
+    discoveryStatus: z.string().optional(),
     discoveryModel: z.string().optional(),
     discoveryRun: z.string().optional(),
     tags: z.array(z.string()).optional()
@@ -47,3 +58,4 @@ export type CapabilityArtifact = z.infer<typeof CapabilityArtifactSchema>;
 export type Step = z.infer<typeof StepSchema>;
 export type Action = z.infer<typeof ActionSchema>;
 export type Parameter = z.infer<typeof ParameterSchema>;
+export type OutputField = z.infer<typeof OutputFieldSchema>;

@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { SurfaceAdapter } from '../surface/types.js';
 import { CapabilityArtifact, Step } from '../artifact/schema.js';
 import { Logger } from '../utils/logger.js';
+import { SafetyPolicy } from '../policy/safety.js';
 import { randomUUID } from 'crypto';
 
 interface DiscoveryConfig {
@@ -14,10 +15,14 @@ interface DiscoveryConfig {
 export class DiscoveryAgent {
   private anthropic: Anthropic;
   private logger: Logger;
+  private policy: SafetyPolicy;
 
-  constructor(apiKey: string, logger: Logger) {
+  constructor(apiKey: string, logger: Logger, policy?: SafetyPolicy) {
     this.anthropic = new Anthropic({ apiKey });
     this.logger = logger;
+    this.policy = policy || new SafetyPolicy({
+      allowedDomains: ['localhost']
+    });
   }
 
   async discover(
@@ -56,14 +61,22 @@ export class DiscoveryAgent {
         break;
       }
 
+      const action = {
+        type: decision.action.type as any,
+        target: decision.action.target,
+        value: decision.action.value,
+        description: decision.reasoning
+      };
+
+      const validation = this.policy.validateAction(action, observation.url);
+      if (!validation.allowed) {
+        this.logger.warn('Action blocked by policy', { reason: validation.reason });
+        break;
+      }
+
       const step: Step = {
         id: `step_${i + 1}`,
-        action: {
-          type: decision.action.type as any,
-          target: decision.action.target,
-          value: decision.action.value,
-          description: decision.reasoning
-        },
+        action,
         expectedOutcome: decision.expectedOutcome
       };
 

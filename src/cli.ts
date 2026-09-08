@@ -104,6 +104,8 @@ async function replayCommand(): Promise<void> {
 }
 
 async function escalateDemoCommand(): Promise<void> {
+  ensureDirectories();
+  
   const logger = new Logger();
   const surface = new PlaywrightWebSurface();
 
@@ -117,29 +119,42 @@ async function escalateDemoCommand(): Promise<void> {
 
     const escalation = new EscalationManager(surface, logger);
 
+    console.log('Escalation Demo: Simulating stuck automation state\n');
     console.log('Creating intervention request...');
     const request = await escalation.createInterventionRequest(
-      'Unable to locate submit button',
+      'Simulated: Unable to locate submit button (demo scenario)',
       'http://localhost:3000',
       'click button:Submit',
       'Element not found'
     );
 
-    console.log('\nIntervention Request:');
-    console.log(JSON.stringify(request, null, 2));
+    console.log('\nIntervention Request (truncated):');
+    console.log(JSON.stringify({
+      ...request,
+      sessionSnapshot: '[TRUNCATED]'
+    }, null, 2));
 
     console.log('\nPausing session...');
     await escalation.pause();
 
     console.log('Ceding control to operator...');
     const handoffToken = await escalation.cede('operator_123');
-    console.log(`Handoff token: ${handoffToken.substring(0, 50)}...`);
+    console.log(`Handoff token (truncated): ${handoffToken.substring(0, 12)}...`);
+
+    const logPath = join(LOGS_DIR, 'escalation-demo.log');
+    writeFileSync(logPath, JSON.stringify({
+      request,
+      handoffToken,
+      timestamp: new Date().toISOString()
+    }, null, 2));
+    console.log(`Full details saved to: ${logPath}`);
 
     console.log('\nResuming session...');
     await escalation.resume(request.sessionSnapshot);
     console.log('Session resumed successfully');
 
     console.log('\nEscalation demo complete!');
+    console.log('Note: This demonstrates the handoff mechanism in a simulated scenario.');
   } finally {
     await surface.close();
   }
